@@ -4,7 +4,7 @@
 #
 # Inspired by stucule's maxio script from reddit
 # https://www.reddit.com/r/RemarkableTablet/comments/7blo1k/suggestion_network_drive_in_myfiles/
-# 
+#
 # Uses hardlinks for unedited files
 # Uses wget to download edited files
 # Uses associative arrays for maps
@@ -119,7 +119,7 @@ do
     [[ -n "${VERBOSE}" ]] && echo "UUID ${F} -> ${TARGET}"
     UUIDS["${TARGET}"]="${F}"
     [[ -n "${P}" ]] && UUIDS["${FULL["${P}"]}"]="${P}"
-    
+
     mkdir -p "${TGTROOT}/$(dirname "${TARGET}")"
     if [[ ! -s "${SRCROOT}/${F}.lines" && -s "${SRCROOT}/${F}.${EXT["${F}"]}" ]]
     then
@@ -133,7 +133,7 @@ do
     elif [[ "${SRCROOT}/${F}.metadata" -nt "${TGTROOT}/${TARGET}" ]]
     then
         [[ -z "${QUIET}" ]] && echo "Downloading ${TGTROOT}/${TARGET} from ${URL}/${F}/${EXT["${F}"]}"
-        rm -f "${TGTROOT}/${TARGET}" 
+        rm -f "${TGTROOT}/${TARGET}"
         touch -r "${SRCROOT}/${F}.metadata" "${TGTROOT}/${TARGET}"
         wget ${WGET_FLAGS} -O "${TGTROOT}/${TARGET}" "${URL}/${F}/${EXT["${F}"]}"
     else
@@ -152,7 +152,7 @@ do
 done
 
 if [[ -n "${SYNC}" ]]
-then 
+then
     if [[ -n "${RCLONE}" && -x "${RCLONE}" && -n "${UPLOAD}" ]]
     then
         [[ -z "${QUIET}" ]] && echo "Syncing ${TGTROOT}/ to ${UPLOAD}/ ..."

@@ -1,0 +1,7 @@
+[Unitt]
+Description=Start file-tree script (usually by a timer)
+
+[Service]
+Type=simple
+Nice=19
+ExecStart=/home/root/file-tree.sh -v -s
