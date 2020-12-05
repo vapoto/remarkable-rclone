@@ -34,7 +34,7 @@ typeset -A PARENT
 typeset -A NAME
 typeset -A TYPE
 typeset -A FULL
-typeset -A EXT
+typeset -A FILETYPE
 typeset -A UUIDS
 typeset -a FILES
 typeset -a DIRS
@@ -81,11 +81,9 @@ do
     if [[ "${TYPE["${UUID}"]}" == "DocumentType" ]]
     then
         FILES+=( "${UUID}" )
-        EXT["${UUID}"]="$(awk -F\" '$2=="fileType"{print $4}' "${D%.metadata}.content")"
-        if [[ -z "${EXT["${UUID}"]}" && -s "${D%.metadata}.lines" ]]
-        then
-            EXT["${UUID}"]="pdf"
-        fi
+        FILETYPE["${UUID}"]="$(awk -F\" '$2=="fileType"{print $4}' "${D%.metadata}.content")"
+        [[ "${FILETYPE["${UUID}"]}" == "pdf" ]] && NAME["${UUID}"]="${NAME["${UUID}"]%.pdf}"
+        [[ "${FILETYPE["${UUID}"]}" == "epub" ]] && NAME["${UUID}"]="${NAME["${UUID}"]%.epub}"
     elif [[ "${TYPE["${UUID}"]}" == "CollectionType" ]]
     then
         DIRS+=( "${UUID}" )
@@ -97,6 +95,7 @@ done
 [[ -z "${QUIET}" ]] && echo "Updating ${TGTROOT}/ ..."
 for F in "${FILES[@]}"
 do
+    # Build up full name including path
     FULL["${F}"]="${NAME[${F}]}"
     P="${PARENT["${F}"]}"
     while [[ "${P}" != "" ]]
@@ -115,36 +114,47 @@ do
         FULL["${PARENT["${F}"]}"]="$(dirname "${FULL["${F}"]}")"
     fi
 
-    TARGET="${FULL["${F}"]}.${EXT["${F}"]}"
+    TARGET="${FULL["${F}"]}"
     [[ -n "${VERBOSE}" ]] && echo "UUID ${F} -> ${TARGET}"
     UUIDS["${TARGET}"]="${F}"
     [[ -n "${P}" ]] && UUIDS["${FULL["${P}"]}"]="${P}"
 
     mkdir -p "${TGTROOT}/$(dirname "${TARGET}")"
-    if [[ ! -s "${SRCROOT}/${F}.lines" && -s "${SRCROOT}/${F}.${EXT["${F}"]}" ]]
-    then
-        if [[ ! "${SRCROOT}/${F}.${EXT["${F}"]}" -ef "${TGTROOT}/${TARGET}" ]]
+    if [[ "${FILETYPE["${F}"]}" == "pdf" || "${FILETYPE["${F}"]}" == "epub" ]]
+    then # PDF or ePUB
+        if [[ ! "${SRCROOT}/${F}.${FILETYPE["${F}"]}" -ef "${TGTROOT}/${TARGET}.${FILETYPE["${F}"]}" ]]
         then
-            [[ -z "${QUIET}" ]] && echo "Linking ${SRCROOT}/${F}.${EXT["${F}"]} to ${TGTROOT}/${TARGET}"
-            ln -f "${SRCROOT}/${F}.${EXT["${F}"]}" "${TGTROOT}/${TARGET}"
+            [[ -z "${QUIET}" ]] && echo "Linking ${SRCROOT}/${F}.${FILETYPE["${F}"]} to ${TGTROOT}/${TARGET}.${FILETYPE["${F}"]}"
+            ln -f "${SRCROOT}/${F}.${FILETYPE["${F}"]}" "${TGTROOT}/${TARGET}.${FILETYPE["${F}"]}"
         else
-            [[ -n "${VERBOSE}" ]] && echo "Link ${TGTROOT}/${TARGET}"
+            [[ -n "${VERBOSE}" ]] && echo "Target ${TGTROOT}/${TARGET} already exists"
         fi
-    elif [[ "${SRCROOT}/${F}.metadata" -nt "${TGTROOT}/${TARGET}" ]]
-    then
-        [[ -z "${QUIET}" ]] && echo "Downloading ${TGTROOT}/${TARGET} from ${URL}/${F}/${EXT["${F}"]}"
-        rm -f "${TGTROOT}/${TARGET}"
-        touch -r "${SRCROOT}/${F}.metadata" "${TGTROOT}/${TARGET}"
-        wget ${WGET_FLAGS} -O "${TGTROOT}/${TARGET}" "${URL}/${F}/${EXT["${F}"]}"
+    fi
+
+    if [[ -n "$(ls -A "${SRCROOT}/${F}")" ]]
+    then # Marked file
+        if [[ "${FILETYPE["${F}"]}" == "pdf" || "${FILETYPE["${F}"]}" == "epub" ]]
+        then
+            TARGET+=".marked"
+        fi
+        if [[ "${SRCROOT}/${F}.metadata" -nt "${TGTROOT}/${TARGET}.pdf" ]]
+        then # File has been updated
+            [[ -z "${QUIET}" ]] && echo "Downloading ${TGTROOT}/${TARGET}.pdf from ${URL}/${F}/placeholder}"
+            rm -f "${TGTROOT}/${TARGET}"
+            touch -r "${SRCROOT}/${F}.metadata" "${TGTROOT}/${TARGET}.pdf"
+            wget ${WGET_FLAGS} -O "${TGTROOT}/${TARGET}.pdf" "${URL}/${F}/placeholder}"
+        else
+            [[ -n "${VERBOSE}" ]] && echo "Marked file ${TGTROOT}/${TARGET} has not been updated"
+        fi
     else
-        [[ -n "${VERBOSE}" ]] && echo "Clone ${TGTROOT}/${TARGET}"
+        [[ -n "${VERBOSE}" ]] && echo "File ${TGTROOT}/${TARGET} is unmarked"
     fi
 done
 
 find "${TGTROOT}" -type f | while read F
 do
     F="${F#${TGTROOT}/}"
-    if [[ -z "${UUIDS["${F}"]}" ]]
+    if [[ -z "${UUIDS["${F%.*}"]}" ]]
     then
         [[ -z "${QUIET}" ]] && echo "Deleting ${F} as looks to have been removed."
         rm "${TGTROOT}/${F}"
