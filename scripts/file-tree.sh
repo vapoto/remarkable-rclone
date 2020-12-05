@@ -36,6 +36,7 @@ typeset -A TYPE
 typeset -A FULL
 typeset -A FILETYPE
 typeset -A UUIDS
+typeset -A UUIDS_DIRS
 typeset -a FILES
 typeset -a DIRS
 
@@ -118,6 +119,7 @@ do
     if [[ -n "${PARENT["${F}"]}" && -z "${FULL["${PARENT["${F}"]}"]}" ]]
     then
         FULL["${PARENT["${F}"]}"]="$(dirname "${FULL["${F}"]}")"
+        UUIDS_DIRS["${FULL["${PARENT["${F}"]}"]}"]="${PARENT["${F}"]}"
     fi
 
     TARGET="${FULL["${F}"]}"
@@ -158,6 +160,7 @@ do
     fi
 done
 
+# Remove deleted files
 find "${TGTROOT}" -type f | while read F
 do
     F="${F#${TGTROOT}/}"
@@ -165,6 +168,17 @@ do
     then
         [[ -z "${QUIET}" ]] && echo "Deleting ${F} as looks to have been removed."
         rm "${TGTROOT}/${F}"
+    fi
+done
+
+# Remove deleted folders
+find "${TGTROOT}" -type d -mindepth 1 | while read D
+do
+    D="${D#${TGTROOT}/}"
+    if [[ "${D}" != "Trash" && -z "${UUIDS_DIRS["${D}"]}" ]]
+    then
+        [[ -z "${QUIET}" ]] && echo "Deleting ${D} as looks to have been removed."
+        rm -rf "${TGTROOT}/${D}"
     fi
 done
 
