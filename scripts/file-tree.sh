@@ -75,24 +75,30 @@ fi
 for D in "${SRCROOT}/"*.metadata
 do
     UUID="$(basename "${D}" ".metadata")"
-    PARENT["${UUID}"]="$(awk -F\" '$2=="parent"{print $4}' "${D}")"
-    NAME["${UUID}"]="$(awk -F\" '$2=="visibleName"{print $4}' "${D}")"
-    TYPE["${UUID}"]="$(awk -F\" '$2=="type"{print $4}' "${D}")"
-    if [[ "${TYPE["${UUID}"]}" == "DocumentType" ]]
+    if [[ "$(awk -F\" '$2=="deleted"{print $3}' "${D}")" == ": false," ]]
     then
-        FILES+=( "${UUID}" )
-        FILETYPE["${UUID}"]="$(awk -F\" '$2=="fileType"{print $4}' "${D%.metadata}.content")"
-        [[ "${FILETYPE["${UUID}"]}" == "pdf" ]] && NAME["${UUID}"]="${NAME["${UUID}"]%.pdf}"
-        [[ "${FILETYPE["${UUID}"]}" == "epub" ]] && NAME["${UUID}"]="${NAME["${UUID}"]%.epub}"
-    elif [[ "${TYPE["${UUID}"]}" == "CollectionType" ]]
-    then
-        DIRS+=( "${UUID}" )
+        PARENT["${UUID}"]="$(awk -F\" '$2=="parent"{print $4}' "${D}")"
+        NAME["${UUID}"]="$(awk -F\" '$2=="visibleName"{print $4}' "${D}")"
+        TYPE["${UUID}"]="$(awk -F\" '$2=="type"{print $4}' "${D}")"
+        if [[ "${TYPE["${UUID}"]}" == "DocumentType" ]]
+        then
+            FILES+=( "${UUID}" )
+            FILETYPE["${UUID}"]="$(awk -F\" '$2=="fileType"{print $4}' "${D%.metadata}.content")"
+            [[ "${FILETYPE["${UUID}"]}" == "pdf" ]] && NAME["${UUID}"]="${NAME["${UUID}"]%.pdf}"
+            [[ "${FILETYPE["${UUID}"]}" == "epub" ]] && NAME["${UUID}"]="${NAME["${UUID}"]%.epub}"
+        elif [[ "${TYPE["${UUID}"]}" == "CollectionType" ]]
+        then
+            DIRS+=( "${UUID}" )
+        else
+            echo "WARN: UUID ${UUID} has an unknown type ${TYPE["${UUID}"]}" >&2
+        fi
     else
-        echo "WARN: UUID ${UUID} has an unknown type ${TYPE["${UUID}"]}" >&2
+        [[ -n "${VERBOSE}" ]] && echo "Skipping UUID ${UUID} as it is marked as deleted"
     fi
 done
 
 [[ -z "${QUIET}" ]] && echo "Updating ${TGTROOT}/ ..."
+FULL["trash"]="Trash"
 for F in "${FILES[@]}"
 do
     # Build up full name including path
