@@ -122,6 +122,7 @@ for D in "${DIRS[@]}"
 do
     find_full ${D}
     UUIDS_DIRS["${FULL["${D}"]}"]="${D}"
+    mkdir -p "${TGTROOT}/${FULL["${D}"]}"
 done
 
 # Export files
@@ -133,9 +134,7 @@ do
     TARGET="${FULL["${F}"]}"
     [[ -n "${VERBOSE}" ]] && echo "UUID ${F} -> ${TARGET}"
     UUIDS["${TARGET}"]="${F}"
-    [[ -n "${P}" ]] && UUIDS["${FULL["${P}"]}"]="${P}"
 
-    mkdir -p "${TGTROOT}/$(dirname "${TARGET}")"
     if [[ "${FILETYPE["${F}"]}" == "pdf" || "${FILETYPE["${F}"]}" == "epub" ]]
     then # PDF or ePUB
         if [[ ! "${SRCROOT}/${F}.${FILETYPE["${F}"]}" -ef "${TGTROOT}/${TARGET}.${FILETYPE["${F}"]}" ]]
