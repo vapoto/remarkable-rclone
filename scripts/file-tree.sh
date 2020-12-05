@@ -98,29 +98,37 @@ do
     fi
 done
 
-[[ -z "${QUIET}" ]] && echo "Updating ${TGTROOT}/ ..."
-FULL["trash"]="Trash"
-for F in "${FILES[@]}"
-do
+find_full () {
     # Build up full name including path
-    FULL["${F}"]="${NAME[${F}]}"
-    P="${PARENT["${F}"]}"
+    local UUID="$1"
+    FULL["${UUID}"]="${NAME[${UUID}]}"
+    P="${PARENT["${UUID}"]}"
     while [[ "${P}" != "" ]]
     do
         if [[ -n "${FULL["${P}"]}" ]]
         then
-            FULL["${F}"]="${FULL[${P}]}/${FULL["$F"]}"
+            FULL["${UUID}"]="${FULL[${P}]}/${FULL["${UUID}"]}"
             break
         else
-            FULL["${F}"]="${NAME[${P}]}/${FULL["$F"]}"
+            FULL["${UUID}"]="${NAME[${P}]}/${FULL["${UUID}"]}"
         fi
         P="${PARENT["${P}"]}"
     done
-    if [[ -n "${PARENT["${F}"]}" && -z "${FULL["${PARENT["${F}"]}"]}" ]]
-    then
-        FULL["${PARENT["${F}"]}"]="$(dirname "${FULL["${F}"]}")"
-        UUIDS_DIRS["${FULL["${PARENT["${F}"]}"]}"]="${PARENT["${F}"]}"
-    fi
+}
+
+# Build up folder structure
+FULL["trash"]="Trash"
+for D in "${DIRS[@]}"
+do
+    find_full ${D}
+    UUIDS_DIRS["${FULL["${D}"]}"]="${D}"
+done
+
+# Export files
+[[ -z "${QUIET}" ]] && echo "Updating ${TGTROOT}/ ..."
+for F in "${FILES[@]}"
+do
+    find_full ${F}
 
     TARGET="${FULL["${F}"]}"
     [[ -n "${VERBOSE}" ]] && echo "UUID ${F} -> ${TARGET}"
