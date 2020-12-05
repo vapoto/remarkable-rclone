@@ -142,6 +142,7 @@ do
         if [[ "${FILETYPE["${F}"]}" == "pdf" || "${FILETYPE["${F}"]}" == "epub" ]]
         then
             TARGET+=".marked"
+            UUIDS["${TARGET}"]="${F}"
         fi
         if [[ "${SRCROOT}/${F}.metadata" -nt "${TGTROOT}/${TARGET}.pdf" ]]
         then # File has been updated
@@ -160,7 +161,7 @@ done
 find "${TGTROOT}" -type f | while read F
 do
     F="${F#${TGTROOT}/}"
-    if [[ -z "${UUIDS["${F%.*}"]}" ]]
+    if [[ -z "${UUIDS["${F%%.*}"]}" ]]
     then
         [[ -z "${QUIET}" ]] && echo "Deleting ${F} as looks to have been removed."
         rm "${TGTROOT}/${F}"
