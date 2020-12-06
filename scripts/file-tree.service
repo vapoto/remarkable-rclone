@@ -1,4 +1,4 @@
-[Unitt]
+[Unit]
 Description=Start file-tree script (usually by a timer)
 
 [Service]
