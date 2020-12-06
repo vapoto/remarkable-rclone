@@ -126,6 +126,13 @@ do
     mkdir -p "${TGTROOT}/${FULL["${D}"]}"
 done
 
+# Assign IP to usb0 to activate web UI
+ifconfig usb0 10.11.99.1 netmask 255.255.255.248 up
+if (( $? != 0 )); then
+  echo "Unable to assign IP to usb0" >&2
+  exit 1
+fi
+
 # Export files
 [[ -z "${QUIET}" ]] && echo "Updating ${TGTROOT}/ ..."
 for F in "${FILES[@]}"
