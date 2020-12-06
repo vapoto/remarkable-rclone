@@ -17,7 +17,7 @@ TGTROOT="${BASE}/file-tree"
 URL="http://10.11.99.1/download"
 # rclone support if available (http://rclone.org)
 RCLONE="rclone" # change to the rclone binary (add the path if rclone is outside of $PATH)
-RCLONE_CONFIG="/home/root/.rclone.conf" # change to the config file created by 'rclone config'
+RCLONE_CONFIG="/home/root/.config/rclone/rclone.conf" # change to the config file created by 'rclone config'
 UPLOAD="cloud:reMarkable" # sync to a reMarkable folder on the remote rclone storage "cloud"
 
 # Flags
