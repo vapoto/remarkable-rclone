@@ -18,6 +18,7 @@ URL="http://10.11.99.1/download"
 # rclone support if available (http://rclone.org)
 RCLONE="$(which rclone)" # change to the rclone binary (add the path if rclone is outside of $PATH)
 RCLONE_CONFIG="/home/root/.config/rclone/rclone.conf" # change to the config file created by 'rclone config'
+RCLONE_OPTIONS="--delete-excluded"
 UPLOAD="cloud:reMarkable" # sync to a reMarkable folder on the remote rclone storage "cloud"
 
 # Flags
@@ -194,7 +195,7 @@ then
     if [[ -n "${RCLONE}" && -x "${RCLONE}" && -n "${UPLOAD}" ]]
     then
         [[ -z "${QUIET}" ]] && echo "Syncing ${TGTROOT}/ to ${UPLOAD}/ ..."
-        "${RCLONE}" sync ${VERBOSE:+--verbose} --config ${RCLONE_CONFIG} --delete-excluded "${TGTROOT}/" "${UPLOAD}/"
+        "${RCLONE}" sync ${VERBOSE:+--verbose} ${RCLONE_OPTIONS} --config ${RCLONE_CONFIG} "${TGTROOT}/" "${UPLOAD}/"
     else
         echo "ERROR: Unable to sync as rclone is not available or correctly configured" >&2
     fi
