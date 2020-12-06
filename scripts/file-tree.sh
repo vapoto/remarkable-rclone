@@ -11,13 +11,14 @@
 # Uses awk for data extraction from metadata files
 
 # Standard variables
-BASE="/home/root/.local/share/remarkable"
+HOME="/home/root/"
+BASE="${HOME}.local/share/remarkable"
 SRCROOT="${BASE}/xochitl"
 TGTROOT="${BASE}/file-tree"
 URL="http://10.11.99.1/download"
 # rclone support if available (http://rclone.org)
 RCLONE="$(which rclone)" # change to the rclone binary (add the path if rclone is outside of $PATH)
-RCLONE_CONFIG="/home/root/.config/rclone/rclone.conf" # change to the config file created by 'rclone config'
+RCLONE_CONFIG="${HOME}.config/rclone/rclone.conf" # change to the config file created by 'rclone config'
 RCLONE_OPTIONS="--delete-excluded"
 UPLOAD="cloud:reMarkable" # sync to a reMarkable folder on the remote rclone storage "cloud"
 
